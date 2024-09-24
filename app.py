@@ -17,8 +17,7 @@ db_host = os.getenv('db_host')
 db_port = os.getenv('db_port')
 
 # Формируем строку подключения к базе данных
-app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{
-    db_user}:{db_pass}@{db_host}:{db_port}/{db_name}'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Создаем объект базы данных
@@ -64,7 +63,6 @@ def get_users():
 def hello_world():
     return 'Hello, Andrii! Welcome to your Flask Web App with PostgreSQL and .env variables!'
 
-
 # Запускаем приложение
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+#if __name__ == '__main__':
+#    app.run(host='0.0.0.0', port=5000, debug=True)
