@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+data:
+  db_name: app
+  db_user: postgres
