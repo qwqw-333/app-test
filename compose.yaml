@@ -1,0 +1,68 @@
+services:
+  traefik:
+    container_name: traefik
+    image: traefik:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - 80:80
+    volumes:
+      - /etc/localtime:/etc/localtime:ro              # Take date/time from host
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # Connect to docker
+      - ./traefik.yml:/etc/traefik/traefik.yml        # Traefik config
+    networks:
+      - traefik-public
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.rule=Host(`traefik.${domaine}`)
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.routers.traefik.entrypoints=web
+      - traefik.http.routers.traefik.tls=true
+      - traefik.http.routers.traefik.tls.certresolver=myresolver
+
+  app:
+    container_name: app
+    restart: unless-stopped
+    build: .
+    image: app:latest
+    env_file:
+      - .env
+    depends_on:
+      backend-db:
+        condition: service_healthy
+    networks:
+      - traefik-public
+      - backend-internal
+    labels:
+      - traefik.enable=true
+      # HTTP
+      - traefik.http.routers.app.entrypoints=web
+      - traefik.http.routers.app.rule=Host(`app.${domaine}`)
+      # App config
+      - traefik.http.services.app.loadbalancer.server.port=80
+      - traefik.docker.network=traefik-public
+
+  backend-db:
+    container_name: backend-db
+    restart: unless-stopped
+    image: postgres:16
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${db_name}
+      POSTGRES_USER: ${db_user}
+      POSTGRES_PASSWORD: ${db_pass}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${db_user} -d ${db_name}" ]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+    networks:
+      - backend-internal  # База данных будет доступна только во внутренней сети
+
+networks:
+  traefik-public:
+    name: traefik-public
+  backend-internal:
+    name: backend-internal
